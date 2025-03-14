@@ -25,23 +25,47 @@ public class Transaction {
         return reference;
     }
 
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public Double getBalance() {
         return balance;
+    }
+
+    public void setBalance(Double balance) {
+        this.balance = balance;
     }
 
     public String getMutation() {
         return mutation;
     }
 
+    public void setMutation(String mutation) {
+        this.mutation = mutation;
+    }
+
     public Double getEndBalance() {
         return endBalance;
+    }
+
+    public void setEndBalance(Double endBalance) {
+        this.endBalance = endBalance;
     }
 }

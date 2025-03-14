@@ -5,18 +5,20 @@ import nl.rabobank.transactionverifier.model.Transaction;
 import nl.rabobank.transactionverifier.translator.CSVTranslator;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
+import java.util.Arrays;
+import java.util.List;
 
 @Service
 public class TransactionService {
 
     private final TransactionDAO transactionDAO;
-    private final CSVTranslator csvTranslator;
 
 
-    public TransactionService(TransactionDAO transactionDAO, CSVTranslator csvTranslator) {
+    public TransactionService(TransactionDAO transactionDAO) {
         this.transactionDAO = transactionDAO;
-        this.csvTranslator = csvTranslator;
+    }
+
+    public void validateTransaction(String report) {
     }
 
 }
