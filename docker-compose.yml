@@ -13,3 +13,21 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ansible:
+    image: ansible-postgres-setup
+    container_name: ansible
+    build:
+      context: ansible/docker
+    volumes:
+      - ./ansible:/ansible
+    command: >
+      ansible-playbook
+      -i /ansible/playbooks/inventory/hosts.yml
+      -e "pg_host=postgres"
+      /ansible/playbooks/database_setup.yml

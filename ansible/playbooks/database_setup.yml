@@ -1,0 +1,103 @@
+---
+- name: PostgreSQL Database Setup
+  hosts: postgres_servers
+  become: true
+  gather_facts: true
+
+  vars_prompt:
+    - name: pg_admin_password
+      prompt: "Enter PostgreSQL admin password"
+      private: yes
+      default: "{{ pg_admin_password | default('') }}"
+
+    - name: pg_db_password
+      prompt: "Enter new database user password"
+      private: yes
+      default: "{{ pg_db_password | default('') }}"
+
+  tasks:
+
+    - name: Ensure PostgreSQL service is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Create directory for SQL scripts
+      file:
+        path: /tmp/postgres_setup
+        state: directory
+        mode: '0755'
+
+    - name: Copy database initialization script
+      template:
+        src: templates/init_db.sql.j2
+        dest: /tmp/postgres_setup/init_db.sql
+        mode: '0644'
+
+    - name: Execute database initialization script
+      become_user: "{{ pg_admin_user }}"
+      environment:
+        PGPASSWORD: "{{ pg_admin_password }}"
+      shell: >
+        psql
+        -h {{ pg_host }}
+        -p {{ pg_port }}
+        -U {{ pg_admin_user }}
+        -f /tmp/postgres_setup/init_db.sql
+      register: init_result
+      changed_when: "'CREATE USER' in init_result.stdout or 'CREATE DATABASE' in init_result.stdout"
+
+    - name: Display database initialization result
+      debug:
+        var: init_result.stdout_lines
+
+    - name: Remove temporary SQL files
+      file:
+        path: /tmp/postgres_setup
+        state: absent
+
+    # Optional: Save encrypted passwords for future use
+    - name: Save passwords as encrypted variables (optional)
+      delegate_to: localhost
+      connection: local
+      block:
+        - name: Create vault password file if requested
+          copy:
+            content: "{{ lookup('env', 'ANSIBLE_VAULT_PASSWORD') }}"
+            dest: ~/.ansible_vault_tempfile
+            mode: '0600'
+          when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
+
+        - name: Encrypt admin password for future use
+          shell: >
+            ansible-vault encrypt_string 
+            '{{ pg_admin_password }}' 
+            --name 'pg_admin_password' 
+            --vault-password-file ~/.ansible_vault_tempfile
+          register: admin_vault_output
+          when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
+
+        - name: Encrypt db password for future use
+          shell: >
+            ansible-vault encrypt_string 
+            '{{ pg_db_password }}' 
+            --name 'pg_db_password' 
+            --vault-password-file ~/.ansible_vault_tempfile
+          register: db_vault_output
+          when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
+
+        - name: Display encrypted strings for future use
+          debug:
+            msg:
+              - "For future runs, you can add these to your inventory:"
+              - "{{ admin_vault_output.stdout | default('ANSIBLE_VAULT_PASSWORD not set') }}"
+              - "{{ db_vault_output.stdout | default('ANSIBLE_VAULT_PASSWORD not set') }}"
+          when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
+
+        - name: Remove temporary vault password file
+          file:
+            path: ~/.ansible_vault_tempfile
+            state: absent
+          when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
+      when: lookup('env', 'SAVE_ENCRYPTED_PASSWORDS') | default('false') | bool
