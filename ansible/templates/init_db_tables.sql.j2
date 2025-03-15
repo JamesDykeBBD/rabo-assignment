@@ -2,13 +2,27 @@
 \echo 'Creating database tables'
 
 -- Create tables
+CREATE TABLE IF NOT EXISTS reports (
+    id SERIAL PRIMARY KEY,
+    file_id TEXT NOT NULL UNIQUE,
+    file_name TEXT NOT NULL,
+    total_records INTEGER NOT NULL,
+    valid_records INTEGER NOT NULL,
+    invalid_records INTEGER NOT NULL,
+    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
     id SERIAL PRIMARY KEY,
-    reference VARCHAR(50) NOT NULL UNIQUE,
-    account_number VARCHAR(18) NOT NULL,
+    report_id INTEGER NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+    reference TEXT NOT NULL,
+    account_number TEXT NOT NULL,
     description TEXT NOT NULL,
     start_balance NUMERIC(10, 2) NOT NULL,
-    mutation NUMERIC(10, 2) NOT NULL,
+    mutation TEXT NOT NULL,
     end_balance NUMERIC(10, 2) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Output confirmation message
+\echo 'Database tables created successfully'

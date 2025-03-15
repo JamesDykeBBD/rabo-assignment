@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Transactions</title>
+    <title>View Reports</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .transactions-container {
+        .reports-container {
             margin: 50px auto;
             padding: 20px;
             border-radius: 5px;
@@ -28,7 +28,7 @@
             align-items: center;
             margin-bottom: 20px;
         }
-        .no-transactions {
+        .no-reports {
             text-align: center;
             padding: 50px 0;
         }
@@ -36,23 +36,23 @@
 </head>
 <body>
 <div class="container">
-    <div class="transactions-container">
+    <div class="reports-container">
         <div class="header-section">
-            <h2>Transaction Files</h2>
-            <a th:unless="${sessionTransactions == null || sessionTransactions.isEmpty()}" href="/transactions/validate" class="btn btn-primary">Upload New File</a>
+            <h2>Transaction Reports</h2>
+            <a th:unless="${reports == null || reports.isEmpty()}" href="/transactions/validate" class="btn btn-primary">Upload New File</a>
         </div>
 
-        <!-- If no transactions are available -->
-        <div class="no-transactions" th:if="${sessionTransactions == null || sessionTransactions.isEmpty()}">
+        <!-- If no reports are available -->
+        <div class="no-reports" th:if="${reports == null || reports.isEmpty()}">
             <div class="alert alert-info">
-                <h4>No transaction files found</h4>
+                <h4>No transaction reports found</h4>
                 <p>Upload a transaction file to get started.</p>
                 <a href="/transactions/validate" class="btn btn-primary mt-3">Upload Transaction File</a>
             </div>
         </div>
 
-        <!-- Display transactions list -->
-        <div th:if="${sessionTransactions != null && !sessionTransactions.isEmpty()}">
+        <!-- Display reports list -->
+        <div th:if="${reports != null && !reports.isEmpty()}">
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead class="table-dark">
@@ -66,25 +66,25 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="entry : ${sessionTransactions}"
-                        th:attr="data-href=@{'/transactions/view/' + ${entry.key}}"
+                    <tr th:each="report : ${reports}"
+                        th:attr="data-href=@{'/transactions/view/' + ${report.fileId}}"
                         class="clickable-row">
-                        <td th:text="${entry.value.fileId}"></td>
-                        <td th:text="${entry.value.fileName != null ? entry.value.fileName : 'N/A'}"></td>
-                        <td th:text="${entry.value.totalRecords != null ? entry.value.totalRecords : 0}"></td>
-                        <td th:text="${entry.value.validRecords != null ? entry.value.validRecords : 0}"></td>
+                        <td th:text="${report.fileId}"></td>
+                        <td th:text="${report.fileName != null ? report.fileName : 'N/A'}"></td>
+                        <td th:text="${report.totalRecords != null ? report.totalRecords : 0}"></td>
+                        <td th:text="${report.validRecords != null ? report.validRecords : 0}"></td>
                         <td>
-                            <span th:if="${entry.value.invalidRecords != null && entry.value.invalidRecords > 0}"
-                                  th:text="${entry.value.invalidRecords}"
+                            <span th:if="${report.invalidRecords != null && report.invalidRecords > 0}"
+                                  th:text="${report.invalidRecords}"
                                   class="badge bg-danger"></span>
-                            <span th:if="${entry.value.invalidRecords != null && entry.value.invalidRecords == 0}"
+                            <span th:if="${report.invalidRecords != null && report.invalidRecords == 0}"
                                   th:text="0"
                                   class="badge bg-success"></span>
-                            <span th:if="${entry.value.invalidRecords == null}"
+                            <span th:if="${report.invalidRecords == null}"
                                   th:text="0"
                                   class="badge bg-secondary"></span>
                         </td>
-                        <td th:text="${#dates.format(new java.util.Date(entry.value.uploadDate), 'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${#dates.format(new java.util.Date(report.uploadDate), 'yyyy-MM-dd HH:mm')}"></td>
                     </tr>
                     </tbody>
                 </table>

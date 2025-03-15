@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 public class CSVTranslator implements GenericTranslator<String> {
 
@@ -32,9 +34,9 @@ public class CSVTranslator implements GenericTranslator<String> {
             transaction.setReference(record[0]);
             transaction.setAccountNumber(record[1]);
             transaction.setDescription(record[2]);
-            transaction.setBalance(Double.parseDouble(record[3]));
+            transaction.setBalance(BigDecimal.valueOf(Double.parseDouble(record[3])));
             transaction.setMutation(record[4]);
-            transaction.setEndBalance(Double.parseDouble(record[5]));
+            transaction.setEndBalance(BigDecimal.valueOf(Double.parseDouble(record[5])));
         } catch (NumberFormatException nfe) {
             throw new InvalidRecordException(nfe.getMessage());
         }

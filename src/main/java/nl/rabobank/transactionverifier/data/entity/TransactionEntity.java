@@ -3,6 +3,7 @@ package nl.rabobank.transactionverifier.data.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "transactions")
@@ -12,7 +13,7 @@ public class TransactionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reference", nullable = false, unique = true)
+    @Column(name = "reference", nullable = false)
     private String reference;
 
     @Column(name = "account_number", nullable = false, length = 18)
@@ -24,14 +25,18 @@ public class TransactionEntity {
     @Column(name = "start_balance", nullable = false, precision = 10, scale = 2)
     private BigDecimal startBalance;
 
-    @Column(name = "mutation", nullable = false, precision = 10, scale = 2)
-    private BigDecimal mutation;
+    @Column(name = "mutation", nullable = false)
+    private String mutation;
 
     @Column(name = "end_balance", nullable = false, precision = 10, scale = 2)
     private BigDecimal endBalance;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "report_id", nullable = false)
+    private ReportEntity report;
 
     // Default constructor
     public TransactionEntity() {
@@ -78,11 +83,11 @@ public class TransactionEntity {
         this.startBalance = startBalance;
     }
 
-    public BigDecimal getMutation() {
+    public String getMutation() {
         return mutation;
     }
 
-    public void setMutation(BigDecimal mutation) {
+    public void setMutation(String mutation) {
         this.mutation = mutation;
     }
 
@@ -102,9 +107,35 @@ public class TransactionEntity {
         this.createdAt = createdAt;
     }
 
+    public ReportEntity getReport() {
+        return report;
+    }
+
+    public void setReport(ReportEntity report) {
+        this.report = report;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TransactionEntity that = (TransactionEntity) o;
+
+        if (!Objects.equals(reference, that.reference)) return false;
+        return Objects.equals(report, that.report);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = reference != null ? reference.hashCode() : 0;
+        result = 31 * result + (report != null ? report.getId().hashCode() : 0);
+        return result;
     }
 
     @Override
@@ -118,6 +149,7 @@ public class TransactionEntity {
                 ", mutation=" + mutation +
                 ", endBalance=" + endBalance +
                 ", createdAt=" + createdAt +
+                ", reportId=" + (report != null ? report.getId() : null) +
                 '}';
     }
 }

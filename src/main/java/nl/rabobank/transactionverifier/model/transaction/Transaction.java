@@ -1,18 +1,22 @@
 package nl.rabobank.transactionverifier.model.transaction;
 
-public class Transaction {
+import java.io.Serializable;
+import java.math.BigDecimal;
 
+public class Transaction implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     public String reference;
     public String accountNumber;
     public String description;
-    public Double balance;
+    public BigDecimal balance;
     public String mutation;
-    public Double endBalance;
+    public BigDecimal endBalance;
 
     public Transaction() {
     }
 
-    public Transaction(String reference, String accountNumber, String description, Double balance, String mutation, Double endBalance) {
+    public Transaction(String reference, String accountNumber, String description, BigDecimal balance, String mutation, BigDecimal endBalance) {
         this.reference = reference;
         this.accountNumber = accountNumber;
         this.description = description;
@@ -45,11 +49,11 @@ public class Transaction {
         this.description = description;
     }
 
-    public Double getBalance() {
+    public BigDecimal getBalance() {
         return balance;
     }
 
-    public void setBalance(Double balance) {
+    public void setBalance(BigDecimal balance) {
         this.balance = balance;
     }
 
@@ -61,11 +65,11 @@ public class Transaction {
         this.mutation = mutation;
     }
 
-    public Double getEndBalance() {
+    public BigDecimal getEndBalance() {
         return endBalance;
     }
 
-    public void setEndBalance(Double endBalance) {
+    public void setEndBalance(BigDecimal endBalance) {
         this.endBalance = endBalance;
     }
 

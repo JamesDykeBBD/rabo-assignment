@@ -135,4 +135,21 @@ public class TransactionDAO extends AbstractDAO<TransactionEntity, Long> {
         cq.select(root).where(predicate);
         return getResultList(getEntityManager().createQuery(cq));
     }
+
+    /**
+     * Finds all transactions for a specific report.
+     *
+     * @param reportId
+     * @return
+     */
+    public List<TransactionEntity> findAllForReport(long reportId) {
+        CriteriaQuery<TransactionEntity> cq = createQuery();
+        Root<TransactionEntity> root = createRoot(cq);
+
+        cq.select(root);
+        cq.where(getCriteriaBuilder().equal(root.get("reportId"), reportId));
+
+        TypedQuery<TransactionEntity> query = getEntityManager().createQuery(cq);
+        return getResultList(query);
+    }
 }

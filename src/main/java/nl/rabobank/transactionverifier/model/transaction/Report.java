@@ -12,6 +12,9 @@ public class Report {
     private Long uploadDate;
     private List<Transaction> transactions;
 
+    public Report() {
+    }
+
     public Report(String fileId, String fileName, Integer totalRecords, Integer validRecords, Integer invalidRecords, Long uploadDate, List<Transaction> transactions) {
         this.fileId = fileId;
         this.fileName = fileName;

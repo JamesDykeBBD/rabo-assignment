@@ -43,8 +43,9 @@ public class TransactionController {
     @GetMapping()
     public String showReports(HttpSession session, Model model) {
         @SuppressWarnings("unchecked")
-        Map<String, List<Transaction>> sessionTransactions = (Map<String, List<Transaction>>) Optional.ofNullable(session.getAttribute(SESSION_KEY_TRANSACTION)).orElse(new HashMap<>());
-        model.addAttribute("sessionTransactions", sessionTransactions);
+        List<Report> reports = transactionService.getReports();
+        LOG.info("Found {} reports", reports.size());
+        model.addAttribute("reports", reports);
         return "reports";
     }
 
@@ -63,9 +64,6 @@ public class TransactionController {
             return "validation";
         }
 
-        @SuppressWarnings("unchecked")
-        Map<String, Report> sessionTransactions = (Map<String, Report>) Optional.ofNullable(session.getAttribute(SESSION_KEY_TRANSACTION)).orElse(new HashMap<>());
-
         try {
             List<Transaction> transactions = readTransactions(file);
             String fileId = UUID.randomUUID().toString();
@@ -76,14 +74,16 @@ public class TransactionController {
             model.addAttribute("totalRecords", transactions.size());
             model.addAttribute("invalidCount", 0);
 
-            sessionTransactions.put(fileId, new Report(fileId, fileName, transactions.size(), 0, 0, System.currentTimeMillis(), transactions));
-            session.setAttribute("transactions", sessionTransactions);
+            Report report = new Report(fileId, fileName, transactions.size(), 0, 0, System.currentTimeMillis(), transactions);
+            transactionService.saveReport(report);
 
             return "validation";
         } catch (IOException e) {
             model.addAttribute("error", "Failed to process file: " + e.getMessage());
+            LOG.error("Failed to process file: {}", e.getMessage());
             return "validation";
         } catch (Exception e) {
+            LOG.error("An error occurred: {}", e.getMessage());
             model.addAttribute("error", "An error occurred: " + e.getMessage());
             return "validation";
         }
@@ -92,8 +92,7 @@ public class TransactionController {
     @GetMapping("/view/{fileId}")
     public String showReport(@PathVariable String fileId, HttpSession session, Model model) {
         @SuppressWarnings("unchecked")
-        Map<String, Report> sessionTransactions = (Map<String, Report>) Optional.ofNullable(session.getAttribute(SESSION_KEY_TRANSACTION)).orElse(new HashMap<>());
-        Report report = sessionTransactions.get(fileId);
+        Report report = transactionService.getReport(fileId);
         model.addAttribute("fileName", report.getFileName());
         model.addAttribute("fileId", fileId);
         model.addAttribute("transactions", report.getTransactions());
