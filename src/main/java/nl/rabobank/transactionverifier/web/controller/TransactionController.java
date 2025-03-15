@@ -89,6 +89,19 @@ public class TransactionController {
         }
     }
 
+    @GetMapping("/view/{fileId}")
+    public String showReport(@PathVariable String fileId, HttpSession session, Model model) {
+        @SuppressWarnings("unchecked")
+        Map<String, Report> sessionTransactions = (Map<String, Report>) Optional.ofNullable(session.getAttribute(SESSION_KEY_TRANSACTION)).orElse(new HashMap<>());
+        Report report = sessionTransactions.get(fileId);
+        model.addAttribute("fileName", report.getFileName());
+        model.addAttribute("fileId", fileId);
+        model.addAttribute("transactions", report.getTransactions());
+        model.addAttribute("totalRecords", report.getTotalRecords());
+        model.addAttribute("invalidCount", 0);
+        return "validation";
+    }
+
     private List<Transaction> readTransactions(MultipartFile file) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName("ISO-8859-2")))) {
             //Check if the first line is a header, or an actual record

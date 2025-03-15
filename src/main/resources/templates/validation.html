@@ -114,12 +114,11 @@
         </div>
 
         <div class="action-buttons">
-            <form th:action="@{/transactions}" method="get">
-                <input type="hidden" name="fileId" th:value="${fileId}">
+            <form>
                 <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='/transactions/validate'">
                     Upload Another File
                 </button>
-                <button type="submit" class="btn btn-success">
+                <button type="button" class="btn btn-success" onclick="window.location.href='/transactions'">
                     See All Reports
                 </button>
             </form>
