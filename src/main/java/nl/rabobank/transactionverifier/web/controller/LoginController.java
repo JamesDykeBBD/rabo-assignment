@@ -22,7 +22,6 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody LoginRequest loginRequest) {
-        LOG.info("Login request received: {}", loginRequest);
         return ResponseEntity.ok("Login successful");
     }
 }

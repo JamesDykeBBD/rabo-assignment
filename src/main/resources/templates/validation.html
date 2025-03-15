@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Verification</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .results-container {
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .table-responsive {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .custom-file-label::after {
+            content: "Browse";
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .positive {
+            color: #198754;
+        }
+        .negative {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- File Upload Form -->
+    <div class="upload-container" th:if="${transactions == null}">
+        <h2 class="text-center mb-4">Transaction File Upload</h2>
+
+        <div class="alert alert-danger" th:if="${error != null}" th:text="${error}">
+            Error message
+        </div>
+
+        <form th:action="@{/transactions/validate}" method="post" enctype="multipart/form-data" accept-charset="UTF-8">
+            <div class="mb-3">
+                <label for="fileUpload" class="form-label">Select CSV or XML file</label>
+                <input class="form-control" type="file" id="fileUpload" name="file" accept=".csv,.xml" required>
+                <div class="form-text">Please upload a valid transaction file in CSV or XML format.</div>
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Upload and Validate</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Table -->
+    <div class="results-container" th:if="${transactions != null}">
+        <h2 class="mb-4">Transaction Verification Results - <span th:text="${fileId}">fileId</span></h2>
+
+        <div class="alert alert-info" th:if="${fileName != null}">
+            File: <span th:text="${fileName}"></span>
+            <span th:if="${totalRecords != null}" class="ms-3">
+                    Total Records: <span th:text="${totalRecords}"></span>
+                </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                <tr>
+                    <th>Reference</th>
+                    <th>Account Number</th>
+                    <th>Description</th>
+                    <th>Start Balance</th>
+                    <th>Mutation</th>
+                    <th>End Balance</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="transaction : ${transactions}">
+                    <td th:text="${transaction.reference}"></td>
+                    <td th:text="${transaction.accountNumber}"></td>
+                    <td th:utext="${transaction.description}"></td>
+                    <td th:text="${#numbers.formatDecimal(transaction.balance, 1, 2)}"></td>
+                    <td>
+                                <span th:text="${transaction.mutation}"
+                                      th:class="${transaction.mutation.startsWith('+') ? 'positive' : 'negative'}"></span>
+                    </td>
+                    <td th:text="${#numbers.formatDecimal(transaction.endBalance, 1, 2)}"></td>
+                    <td>
+                        <span th:if="${transaction.valid}" class="badge bg-success">Valid</span>
+                        <span th:unless="${transaction.valid}" class="badge bg-danger">Invalid</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-warning" th:if="${invalidCount > 0}">
+            <strong>Warning:</strong> <span th:text="${invalidCount}"></span> invalid transaction(s) found.
+        </div>
+
+        <div class="action-buttons">
+            <form th:action="@{/transactions}" method="get">
+                <input type="hidden" name="fileId" th:value="${fileId}">
+                <button type="button" class="btn btn-secondary me-2" onclick="window.location.href='/transactions/validate'">
+                    Upload Another File
+                </button>
+                <button type="submit" class="btn btn-success">
+                    See All Reports
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

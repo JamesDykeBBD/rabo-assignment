@@ -68,4 +68,20 @@ public class Transaction {
     public void setEndBalance(Double endBalance) {
         this.endBalance = endBalance;
     }
+
+    public boolean isValid() {
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction{" +
+                "reference='" + reference + '\'' +
+                ", accountNumber='" + accountNumber + '\'' +
+                ", description='" + description + '\'' +
+                ", balance=" + balance +
+                ", mutation='" + mutation + '\'' +
+                ", endBalance=" + endBalance +
+                '}';
+    }
 }

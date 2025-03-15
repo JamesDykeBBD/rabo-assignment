@@ -3,10 +3,14 @@ package nl.rabobank.transactionverifier.translator;
 import nl.rabobank.transactionverifier.exceptions.InvalidCSVException;
 import nl.rabobank.transactionverifier.exceptions.InvalidRecordException;
 import nl.rabobank.transactionverifier.model.transaction.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CSVTranslator implements GenericTranslator<String> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CSVTranslator.class);
 
     @Override
     public Transaction convertForward(String input) {
@@ -19,13 +23,17 @@ public class CSVTranslator implements GenericTranslator<String> {
             throw new InvalidRecordException("record length invalid");
         }
 
+        return getTransaction(record);
+    }
+
+    private Transaction getTransaction(String[] record) {
         Transaction transaction = new Transaction();
         try {
             transaction.setReference(record[0]);
             transaction.setAccountNumber(record[1]);
-            transaction.setMutation(record[2]);
+            transaction.setDescription(record[2]);
             transaction.setBalance(Double.parseDouble(record[3]));
-            transaction.setDescription(record[4]);
+            transaction.setMutation(record[4]);
             transaction.setEndBalance(Double.parseDouble(record[5]));
         } catch (NumberFormatException nfe) {
             throw new InvalidRecordException(nfe.getMessage());
