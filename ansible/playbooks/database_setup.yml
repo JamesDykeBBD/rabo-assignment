@@ -1,27 +1,10 @@
 ---
 - name: PostgreSQL Database Setup
   hosts: postgres_servers
-  become: true
-  gather_facts: true
+  gather_facts: false
 
-  vars_prompt:
-    - name: pg_admin_password
-      prompt: "Enter PostgreSQL admin password"
-      private: yes
-      default: "{{ pg_admin_password | default('') }}"
-
-    - name: pg_db_password
-      prompt: "Enter new database user password"
-      private: yes
-      default: "{{ pg_db_password | default('') }}"
 
   tasks:
-
-    - name: Ensure PostgreSQL service is running
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
 
     - name: Create directory for SQL scripts
       file:
@@ -31,8 +14,14 @@
 
     - name: Copy database initialization script
       template:
-        src: templates/init_db.sql.j2
+        src: /ansible/templates/init_db.sql.j2
         dest: /tmp/postgres_setup/init_db.sql
+        mode: '0644'
+
+    - name: Copy database tables script
+      template:
+        src: /ansible/templates/init_db_tables.sql.j2
+        dest: //tmp/postgres_setup/tables.sql
         mode: '0644'
 
     - name: Execute database initialization script
@@ -52,12 +41,43 @@
       debug:
         var: init_result.stdout_lines
 
-    - name: Remove temporary SQL files
-      file:
-        path: /tmp/postgres_setup
-        state: absent
+    - name: Verify database connection
+      environment:
+        PGPASSWORD: "{{ app_db_password }}"
+      shell: >
+        psql
+        -h {{ pg_host }}
+        -p {{ pg_port }}
+        -U {{ app_db_user }}
+        -d {{ pg_db_name }}
+        -c "\conninfo"
+      register: connection_test
+      ignore_errors: true
 
-    # Optional: Save encrypted passwords for future use
+    - name: Display connection info
+      debug:
+        var: connection_test.stdout_lines
+      when: connection_test is success
+
+    - name: Execute database tables script
+      become_user: "{{ app_db_user }}"
+      environment:
+        PGPASSWORD: "{{ app_db_password }}"
+      shell: >
+        psql
+        -h {{ pg_host }}
+        -p {{ pg_port }}
+        -U {{ app_db_user }}
+        -d {{ pg_db_name }}
+        -f /tmp/postgres_setup/tables.sql
+      register: table_result
+      changed_when: "'CREATE TABLE' in table_result.stdout"
+
+    - name: Display database tables result
+      debug:
+        var: table_result.stdout_lines
+      when: table_result is success
+
     - name: Save passwords as encrypted variables (optional)
       delegate_to: localhost
       connection: local
@@ -73,7 +93,7 @@
           shell: >
             ansible-vault encrypt_string 
             '{{ pg_admin_password }}' 
-            --name 'pg_admin_password' 
+            --name 'POSGRES_PASSWORD'
             --vault-password-file ~/.ansible_vault_tempfile
           register: admin_vault_output
           when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''
@@ -81,8 +101,8 @@
         - name: Encrypt db password for future use
           shell: >
             ansible-vault encrypt_string 
-            '{{ pg_db_password }}' 
-            --name 'pg_db_password' 
+            '{{ app_db_password }}' 
+            --name 'app_db_password' 
             --vault-password-file ~/.ansible_vault_tempfile
           register: db_vault_output
           when: lookup('env', 'ANSIBLE_VAULT_PASSWORD') != ''

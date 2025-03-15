@@ -9,7 +9,7 @@ services:
       - TZ=Europe/Amsterdam
       - POSTGRES_PASSWORD
     ports:
-      - 5432:5432
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -24,10 +24,20 @@ services:
     container_name: ansible
     build:
       context: ansible/docker
+    environment:
+      - POSTGRES_PASSWORD
+      - APP_DB_USER
+      - APP_DB_PASSWORD
     volumes:
       - ./ansible:/ansible
+    depends_on:
+      postgres:
+        condition: service_healthy
     command: >
       ansible-playbook
-      -i /ansible/playbooks/inventory/hosts.yml
+      -i inventory/hosts.yml
       -e "pg_host=postgres"
-      /ansible/playbooks/database_setup.yml
+      -e "pg_admin_password=${POSTGRES_PASSWORD}"
+      -e "app_db_user=${APP_DB_USER}"
+      -e "app_db_password=${APP_DB_PASSWORD}"
+      playbooks/database_setup.yml

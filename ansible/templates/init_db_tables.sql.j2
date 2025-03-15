@@ -1,0 +1,14 @@
+-- Create DDL script
+\echo 'Creating database tables'
+
+-- Create tables
+CREATE TABLE IF NOT EXISTS transactions (
+    id SERIAL PRIMARY KEY,
+    reference VARCHAR(50) NOT NULL UNIQUE,
+    account_number VARCHAR(18) NOT NULL,
+    description TEXT NOT NULL,
+    start_balance NUMERIC(10, 2) NOT NULL,
+    mutation NUMERIC(10, 2) NOT NULL,
+    end_balance NUMERIC(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
