@@ -1,6 +1,6 @@
 package nl.rabobank.transactionverifier.translator;
 
-import nl.rabobank.transactionverifier.model.Transaction;
+import nl.rabobank.transactionverifier.model.transaction.Transaction;
 
 public interface GenericTranslator<I> {
 

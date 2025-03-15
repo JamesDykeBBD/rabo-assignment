@@ -2,7 +2,7 @@ package nl.rabobank.transactionverifier.translator;
 
 import nl.rabobank.transactionverifier.exceptions.InvalidCSVException;
 import nl.rabobank.transactionverifier.exceptions.InvalidRecordException;
-import nl.rabobank.transactionverifier.model.Transaction;
+import nl.rabobank.transactionverifier.model.transaction.Transaction;
 import org.springframework.stereotype.Service;
 
 @Service

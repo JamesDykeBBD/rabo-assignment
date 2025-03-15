@@ -1,9 +1,8 @@
 package nl.rabobank.transactionverifier.web.controller;
 
-import nl.rabobank.transactionverifier.model.Transaction;
+import nl.rabobank.transactionverifier.model.transaction.Transaction;
 import nl.rabobank.transactionverifier.service.transaction.TransactionService;
 import nl.rabobank.transactionverifier.translator.CSVTranslator;
-import org.apache.catalina.connector.InputBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

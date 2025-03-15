@@ -1,4 +1,4 @@
-package nl.rabobank.transactionverifier.model;
+package nl.rabobank.transactionverifier.model.transaction;
 
 public class Transaction {
 
