@@ -1,17 +1,21 @@
 package nl.rabobank.transactionverifier.model.transaction;
 
+import nl.rabobank.transactionverifier.service.validator.Validatable;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-public class Transaction implements Serializable {
+public class Transaction implements Serializable, Validatable {
 
     private static final long serialVersionUID = 1L;
-    public String reference;
-    public String accountNumber;
-    public String description;
-    public BigDecimal balance;
-    public String mutation;
-    public BigDecimal endBalance;
+    private String reference;
+    private String accountNumber;
+    private String description;
+    private BigDecimal balance;
+    private String mutation;
+    private BigDecimal endBalance;
+    private String validationMessage;
+    private boolean isValid;
 
     public Transaction() {
     }
@@ -73,10 +77,6 @@ public class Transaction implements Serializable {
         this.endBalance = endBalance;
     }
 
-    public boolean isValid() {
-        return true;
-    }
-
     @Override
     public String toString() {
         return "Transaction{" +
@@ -87,5 +87,23 @@ public class Transaction implements Serializable {
                 ", mutation='" + mutation + '\'' +
                 ", endBalance=" + endBalance +
                 '}';
+    }
+
+    @Override
+    public void setResult(boolean result) {
+        this.valid = result;
+    }
+
+    @Override
+    public void setValidationMessage(String validationMessage) {
+        this.validationMessage = validationMessage;
+    }
+
+    public String getValidationMessage() {
+        return validationMessage;
+    }
+
+    public boolean isValid() {
+        return isValid;
     }
 }
