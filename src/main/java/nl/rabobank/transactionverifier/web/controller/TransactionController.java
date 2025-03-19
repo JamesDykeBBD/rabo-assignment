@@ -1,23 +1,18 @@
 package nl.rabobank.transactionverifier.web.controller;
 
 import jakarta.servlet.http.HttpSession;
+import nl.rabobank.transactionverifier.exceptions.FailedProcessingException;
 import nl.rabobank.transactionverifier.model.transaction.Report;
 import nl.rabobank.transactionverifier.model.transaction.Transaction;
 import nl.rabobank.transactionverifier.service.transaction.TransactionService;
-import nl.rabobank.transactionverifier.translator.CSVTranslator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Controller
@@ -63,28 +58,20 @@ public class TransactionController {
         }
 
         try {
-            List<Transaction> transactions = readTransactions(file);
-            String fileId = UUID.randomUUID().toString();
+            Report report = transactionService.saveReportFromFile(file).orElseThrow(() -> new FailedProcessingException("unable to parse records: no data"));
+
             // Add attributes to model for the view
             model.addAttribute("fileName", fileName);
-            model.addAttribute("fileId", fileId);
-            model.addAttribute("transactions", transactions);
-            model.addAttribute("totalRecords", transactions.size());
+            model.addAttribute("fileId", report.getFileId());
+            model.addAttribute("transactions", report.getTransactions());
+            model.addAttribute("totalRecords", report.getTransactions().size());
             model.addAttribute("invalidCount", 0);
 
-            Report report = new Report(fileId, fileName, transactions.size(), 0, 0, System.currentTimeMillis(), transactions);
-            transactionService.saveReport(report);
-
-            return "validation";
-        } catch (IOException e) {
-            model.addAttribute("error", "Failed to process file: " + e.getMessage());
-            LOG.error("Failed to process file: {}", e.getMessage());
-            return "validation";
         } catch (Exception e) {
             LOG.error("An error occurred: {}", e.getMessage());
             model.addAttribute("error", "An error occurred: " + e.getMessage());
-            return "validation";
         }
+        return "validation";
     }
 
     @GetMapping("/view/{fileId}")
@@ -105,12 +92,16 @@ public class TransactionController {
             case "application/xml":
             default:
         }
+
+        return new ArrayList<>();
     }
 
 
 
-    private readTransactionsFromXML(MultipartFile file) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName("ISO-8859-2")))) {
-
-        }
+    private List<Transaction> readTransactionsFromXML(MultipartFile file) throws IOException {
+//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName("ISO-8859-2")))) {
+//
+//        }
+        return new ArrayList<>();
+    }
 }

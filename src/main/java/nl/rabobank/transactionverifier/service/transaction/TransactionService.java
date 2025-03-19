@@ -6,15 +6,20 @@ import nl.rabobank.transactionverifier.data.entity.ReportEntity;
 import nl.rabobank.transactionverifier.data.entity.TransactionEntity;
 import nl.rabobank.transactionverifier.model.transaction.Report;
 import nl.rabobank.transactionverifier.model.transaction.Transaction;
+import nl.rabobank.transactionverifier.service.parser.CSVParser;
 import nl.rabobank.transactionverifier.service.validator.ValidationResult;
 import nl.rabobank.transactionverifier.service.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -24,24 +29,26 @@ public class TransactionService {
     private final TransactionDAO transactionDAO;
     private final ReportDAO reportDAO;
     private final List<Validator<Transaction>> validators;
+    private final CSVParser csvParser;
 
 
-    public TransactionService(TransactionDAO transactionDAO, ReportDAO reportDAO, List<Validator<Transaction>> validators) {
+    public TransactionService(TransactionDAO transactionDAO, ReportDAO reportDAO, List<Validator<Transaction>> validators, CSVParser csvParser) {
         this.transactionDAO = transactionDAO;
         this.reportDAO = reportDAO;
         this.validators = validators;
+        this.csvParser = csvParser;
     }
 
-    public void saveReport(Report report) {
-        ReportEntity reportEntity = createReportEntity(report);
-        List<ValidationResult<Transaction>> validationResults = validators.stream().flatMap(validator -> validator.validate(report.getTransactions()).stream()).toList();
-        if (validationResults.stream().anyMatch(result -> !result.isValid())) {
-            LOG.error("Validation failed for report {}: {}", reportEntity.getFileId(), validationResults.stream().filter(result -> !result.isValid()).map(ValidationResult::getMessage).toList());
-            return;
-        } else {
-            LOG.info("Validation passed for report {}", reportEntity.getFileId());
-            reportEntity = reportDAO.save(reportEntity);
-            LOG.info("Saved report: {}", reportEntity.getFileId());
+    public Optional<Report> saveReportFromFile(MultipartFile file) {
+        try {
+            List<Transaction> transactions = csvParser.parse(file);
+            List<ValidationResult<Transaction>> validationResults = validators.stream().flatMap(validator -> validator.validate(transactions).stream()).toList();
+            List<ValidationResult<Transaction>> invalidTransactions = validationResults.stream().filter(result -> !result.isValid()).toList();
+            Report report = new Report(UUID.randomUUID().toString(), file.getName(), transactions.size(), transactions.size() - invalidTransactions.size(), invalidTransactions.size(), System.currentTimeMillis(), transactions);
+            reportDAO.save(createReportEntity(report));
+            return Optional.of(report);
+        } catch (IOException ioe) {
+            return Optional.empty();
         }
     }
 
