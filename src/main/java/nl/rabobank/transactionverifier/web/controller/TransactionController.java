@@ -27,11 +27,9 @@ public class TransactionController {
     public static final String SESSION_KEY_TRANSACTION = "transactions";
     private static Logger LOG = LoggerFactory.getLogger(TransactionController.class);
 
-    private final CSVTranslator csvTranslator;
     private final TransactionService transactionService;
 
-    public TransactionController(CSVTranslator csvTranslator, TransactionService transactionService) {
-        this.csvTranslator = csvTranslator;
+    public TransactionController(TransactionService transactionService) {
         this.transactionService = transactionService;
     }
 
@@ -60,7 +58,7 @@ public class TransactionController {
         // Check file extension
         String fileName = file.getOriginalFilename();
         if (fileName == null || !(fileName.endsWith(".csv") || fileName.endsWith(".xml"))) {
-            model.addAttribute("error", "Only CSV and XML files are allowed");
+            model.addAttribute("error", "Only CSV or XML files are allowed");
             return "validation";
         }
 
@@ -90,7 +88,7 @@ public class TransactionController {
     }
 
     @GetMapping("/view/{fileId}")
-    public String showReport(@PathVariable String fileId, HttpSession session, Model model) {
+    public String showReport(@PathVariable String fileId, Model model) {
         @SuppressWarnings("unchecked")
         Report report = transactionService.getReport(fileId);
         model.addAttribute("fileName", report.getFileName());
@@ -102,26 +100,17 @@ public class TransactionController {
     }
 
     private List<Transaction> readTransactions(MultipartFile file) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName("ISO-8859-2")))) {
-            //Check if the first line is a header, or an actual record
-            String firstLine = reader.readLine();
-            boolean hasHeader = false;
-            if (firstLine != null) {
-                String[] parts = firstLine.split(",");
-                //Assume a header if the first column is not numeric
-                hasHeader = parts.length > 0 && !parts[0].matches("^[0-9]+$");
-            }
-
-            List<Transaction> transactions = new ArrayList<>(reader.lines()
-                    .map(csvTranslator::convertForward)
-                    .toList());
-
-            //Because we've manually read the first line, we need to check if we should insert a true record at the head
-            if (firstLine != null && !hasHeader) {
-                transactions.add(0, csvTranslator.convertForward(firstLine));
-            }
-            LOG.info("Process {} transactions", transactions.size());
-            return transactions;
+        switch (file.getContentType()) {
+            case "text/csv":
+            case "application/xml":
+            default:
         }
     }
+
+
+
+    private readTransactionsFromXML(MultipartFile file) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), Charset.forName("ISO-8859-2")))) {
+
+        }
 }

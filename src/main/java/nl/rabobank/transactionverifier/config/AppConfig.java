@@ -1,5 +1,9 @@
 package nl.rabobank.transactionverifier.config;
 
+import nl.rabobank.transactionverifier.model.transaction.Transaction;
+import nl.rabobank.transactionverifier.service.validator.TransactionEndAmountValidator;
+import nl.rabobank.transactionverifier.service.validator.TransactionUniqueReferenceIdValidator;
+import nl.rabobank.transactionverifier.service.validator.Validator;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -7,6 +11,8 @@ import org.springframework.context.support.ReloadableResourceBundleMessageSource
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+
+import java.util.List;
 
 @Configuration
 public class AppConfig {
@@ -34,6 +40,11 @@ public class AppConfig {
         engine.setTemplateResolver(templateResolver());
         engine.setEnableSpringELCompiler(true);
         return engine;
+    }
+    
+    @Bean
+    public List<Validator<Transaction>> transactionValidators() {
+        return List.of(new TransactionEndAmountValidator(), new TransactionUniqueReferenceIdValidator());
     }
 }
 

@@ -6,15 +6,14 @@ import nl.rabobank.transactionverifier.data.entity.ReportEntity;
 import nl.rabobank.transactionverifier.data.entity.TransactionEntity;
 import nl.rabobank.transactionverifier.model.transaction.Report;
 import nl.rabobank.transactionverifier.model.transaction.Transaction;
+import nl.rabobank.transactionverifier.service.validator.ValidationResult;
+import nl.rabobank.transactionverifier.service.validator.Validator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoField;
 import java.util.List;
 
 @Service
@@ -24,18 +23,26 @@ public class TransactionService {
 
     private final TransactionDAO transactionDAO;
     private final ReportDAO reportDAO;
+    private final List<Validator<Transaction>> validators;
 
 
-    public TransactionService(TransactionDAO transactionDAO, ReportDAO reportDAO) {
+    public TransactionService(TransactionDAO transactionDAO, ReportDAO reportDAO, List<Validator<Transaction>> validators) {
         this.transactionDAO = transactionDAO;
         this.reportDAO = reportDAO;
+        this.validators = validators;
     }
 
     public void saveReport(Report report) {
         ReportEntity reportEntity = createReportEntity(report);
-        LOG.info("Saving report: {}", reportEntity);
-        reportEntity = reportDAO.save(reportEntity);
-        LOG.info("Saved report: {}", reportEntity.getFileId());
+        List<ValidationResult<Transaction>> validationResults = validators.stream().flatMap(validator -> validator.validate(report.getTransactions()).stream()).toList();
+        if (validationResults.stream().anyMatch(result -> !result.isValid())) {
+            LOG.error("Validation failed for report {}: {}", reportEntity.getFileId(), validationResults.stream().filter(result -> !result.isValid()).map(ValidationResult::getMessage).toList());
+            return;
+        } else {
+            LOG.info("Validation passed for report {}", reportEntity.getFileId());
+            reportEntity = reportDAO.save(reportEntity);
+            LOG.info("Saved report: {}", reportEntity.getFileId());
+        }
     }
 
     public List<Transaction> getTransactionsForReport(long reportId) {
